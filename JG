@@ -1,0 +1,39 @@
+# Título da PR: Desenvolvimento Inicial do Módulo de Inventário
+
+## Descrição
+
+### Objetivo
+
+Implementar a primeira versão do sistema de inventário responsável pelo gerenciamento dos itens obtidos pelo jogador ao longo da partida.
+
+### Funcionalidades Implementadas
+
+* Criação da classe `GerenciadorInventario`
+* Desenvolvimento do método `inserirItem()`
+* Desenvolvimento do método `excluirItem()`
+* Desenvolvimento do método `listarItens()`
+* Estrutura de armazenamento baseada em coleção dinâmica
+* Inclusão de comentários e documentação básica no código
+
+### Issue Relacionada
+
+Closes #4
+
+### Critérios de Aceitação
+
+* [x] Permitir armazenamento de novos itens
+
+* [x] Permitir remoção de itens cadastrados
+* [x] Exibir os itens presentes no inventário
+* [x] Estrutura compatível com futuras mecânicas de coleta
+
+### Validações Executadas
+
+* Adição sequencial de diversos itens
+* Remoção correta de elementos armazenados
+* Consulta da lista de itens cadastrados
+* Teste de funcionamento com inventário vazio
+
+### Considerações
+
+Esta implementação estabelece a fundação do sistema de inventário e servirá de suporte para a integração com a mecânica de coleta e gerenciamento de recursos do jogo nas próximas etapas do desenvolvimento.
