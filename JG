@@ -1,39 +1,30 @@
-# Título da PR: Desenvolvimento Inicial do Módulo de Inventário
+Título da PR: Implementação Inicial do Sistema de Missões
+Descrição
+Objetivo
 
-## Descrição
+Desenvolver a estrutura base do sistema de missões, permitindo o cadastro e acompanhamento das tarefas que o jogador deverá cumprir durante a partida.
 
-### Objetivo
+Funcionalidades Implementadas
+Criação da classe GerenciadorMissoes
+Desenvolvimento do método adicionarMissao()
+Desenvolvimento do método removerMissao()
+Desenvolvimento do método listarMissoes()
+Implementação de estrutura para armazenamento das missões ativas
+Inclusão de comentários e documentação básica no código
+Issue Relacionada
 
-Implementar a primeira versão do sistema de inventário responsável pelo gerenciamento dos itens obtidos pelo jogador ao longo da partida.
+Closes #5
 
-### Funcionalidades Implementadas
+Critérios de Aceitação
+ Permitir cadastro de novas missões
+ Permitir remoção de missões existentes
+ Exibir todas as missões cadastradas
+ Estrutura preparada para futuras funcionalidades de progresso e recompensas
+Validações Executadas
+Cadastro sequencial de múltiplas missões
+Remoção correta de missões registradas
+Consulta da lista de missões ativas
+Teste de funcionamento com lista de missões vazia
+Considerações
 
-* Criação da classe `GerenciadorInventario`
-* Desenvolvimento do método `inserirItem()`
-* Desenvolvimento do método `excluirItem()`
-* Desenvolvimento do método `listarItens()`
-* Estrutura de armazenamento baseada em coleção dinâmica
-* Inclusão de comentários e documentação básica no código
-
-### Issue Relacionada
-
-Closes #4
-
-### Critérios de Aceitação
-
-* [x] Permitir armazenamento de novos itens
-
-* [x] Permitir remoção de itens cadastrados
-* [x] Exibir os itens presentes no inventário
-* [x] Estrutura compatível com futuras mecânicas de coleta
-
-### Validações Executadas
-
-* Adição sequencial de diversos itens
-* Remoção correta de elementos armazenados
-* Consulta da lista de itens cadastrados
-* Teste de funcionamento com inventário vazio
-
-### Considerações
-
-Esta implementação estabelece a fundação do sistema de inventário e servirá de suporte para a integração com a mecânica de coleta e gerenciamento de recursos do jogo nas próximas etapas do desenvolvimento.
+Esta implementação fornece a base do sistema de missões do jogo e permitirá futuras integrações com objetivos, recompensas, progresso do jogador e eventos da narrativa.
