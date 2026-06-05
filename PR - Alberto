@@ -1,30 +1,43 @@
-Título da PR: Implementação Inicial do Sistema de Missões
-Descrição
-Objetivo
+ Título da PR: Implementação da Estrutura Principal do Jogo Dungeon Algorithms
 
-Desenvolver a estrutura base do sistema de missões, permitindo o cadastro e acompanhamento das tarefas que o jogador deverá cumprir durante a partida.
+ Descrição
 
-Funcionalidades Implementadas
-Criação da classe GerenciadorMissoes
-Desenvolvimento do método adicionarMissao()
-Desenvolvimento do método removerMissao()
-Desenvolvimento do método listarMissoes()
-Implementação de estrutura para armazenamento das missões ativas
-Inclusão de comentários e documentação básica no código
-Issue Relacionada
+ Objetivo
 
-Closes #5
+Implementar a primeira versão funcional do jogo Dungeon Algorithms, integrando a geração procedural da masmorra, movimentação do jogador, sistema de coleta de itens e a base para execução dos algoritmos estudados.
 
-Critérios de Aceitação
- Permitir cadastro de novas missões
- Permitir remoção de missões existentes
- Exibir todas as missões cadastradas
- Estrutura preparada para futuras funcionalidades de progresso e recompensas
-Validações Executadas
-Cadastro sequencial de múltiplas missões
-Remoção correta de missões registradas
-Consulta da lista de missões ativas
-Teste de funcionamento com lista de missões vazia
-Considerações
+ Funcionalidades Implementadas
 
-Esta implementação fornece a base do sistema de missões do jogo e permitirá futuras integrações com objetivos, recompensas, progresso do jogador e eventos da narrativa.
+* Geração procedural de salas e corredores.
+* Sistema de movimentação do jogador.
+* Sistema de colisões com paredes.
+* Geração e coleta de itens no mapa.
+* Estrutura inicial do inventário.
+* Implementação do algoritmo BFS para busca de caminhos.
+* Estrutura base do algoritmo TSP para cálculo de rotas.
+* Interface gráfica inicial do jogo.
+
+ Arquivos Criados
+
+* `DungeonGenerator.java`
+* `Player.java`
+* `Item.java`
+* `Inventory.java`
+* `BFS.java`
+* `TSP.java`
+* `GameScreen.java`
+
+ Testes Realizados
+
+* Validação da geração correta do mapa.
+* Testes de movimentação e colisão.
+* Testes de coleta e armazenamento de itens.
+* Verificação do funcionamento do BFS.
+* Testes iniciais da rota calculada pelo TSP.
+* Testes de exibição da interface gráfica.
+
+ Resultado
+
+O jogo agora possui uma estrutura funcional que permite ao jogador explorar a masmorra, coletar itens, visualizar o inventário e utilizar algoritmos de busca e otimização dentro da mecânica principal do projeto.
+
+
