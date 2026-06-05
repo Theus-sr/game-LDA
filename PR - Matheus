@@ -1,7 +1,5 @@
 Título da PR: Implementação da Estrutura Base do Sistema de Inventário
 
-
-
 ## Objetivo
 
 Esta Pull Request implementa a estrutura inicial do sistema de inventário do jogo, atendendo ao requisito obrigatório de armazenamento e gerenciamento de itens coletáveis.
