@@ -1,4 +1,6 @@
- Título da PR: Implementação da Estrutura Principal do Jogo Dungeon Algorithms
+Título da PR: Implementação da Estrutura Principal do Jogo Dungeon Algorithms
+  
+Objetivo
 
 Implementar a primeira versão funcional do jogo Dungeon Algorithms, integrando a geração procedural da masmorra, movimentação do jogador, sistema de coleta de itens e a base para execução dos algoritmos estudados.
 
