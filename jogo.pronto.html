@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Dungeon Algo Explorer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d0d14; color: #e8e0d0; font-family: 'Courier New', monospace; overflow: hidden; }
+#game-root { display: flex; height: 100vh; width: 100vw; }
+#sidebar { width: 260px; min-width: 260px; background: #13131f; border-right: 1px solid #2a2a3e; display: flex; flex-direction: column; padding: 10px; gap: 8px; overflow-y: auto; }
+#canvas-area { flex: 1; position: relative; display: flex; flex-direction: column; }
+#game-canvas { display: block; }
+#hud { position: absolute; top: 0; left: 0; right: 0; height: 36px; background: #0d0d14cc; border-bottom: 1px solid #2a2a3e; display: flex; align-items: center; padding: 0 12px; gap: 16px; font-size: 12px; z-index: 10; }
+#msg-bar { position: absolute; bottom: 0; left: 0; right: 0; background: #0d0d14dd; border-top: 1px solid #2a2a3e; padding: 6px 12px; font-size: 11px; color: #a0b0c0; min-height: 28px; z-index: 10; }
+.panel { background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 6px; padding: 8px; }
+.panel-title { font-size: 10px; color: #6a7a8a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+.inv-slot { width: 100%; aspect-ratio: 1; background: #0d0d14; border: 1px solid #2a2a3e; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; position: relative; transition: border-color 0.15s; }
+.inv-slot:hover { border-color: #5a6a7a; }
+.inv-slot.filled { border-color: #3a4a5a; }
+.stat-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
+.stat-val { color: #7ab8e8; }
+.algo-badge { font-size: 10px; padding: 3px 7px; border-radius: 3px; display: inline-block; margin: 2px 2px 2px 0; }
+.badge-tsp { background: #2a1f3e; color: #9b7fd4; border: 1px solid #4a3a6e; }
+.badge-bfs { background: #1f2e2a; color: #7fd4b8; border: 1px solid #3a6e5a; }
+.badge-sort { background: #2e2a1f; color: #d4b87f; border: 1px solid #6e5a3a; }
+.btn { background: #1f2e3e; border: 1px solid #3a5a7a; color: #a0c8e8; font-size: 11px; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; transition: background 0.15s; width: 100%; margin-bottom: 3px; }
+.btn:hover { background: #2a3e50; }
+.btn-tsp { border-color: #6a3a9a; color: #b07fe0; background: #1e1330; }
+.btn-tsp:hover { background: #281a42; }
+.btn-sort { border-color: #9a7a3a; color: #e0c07f; background: #2e2010; }
+.btn-sort:hover { background: #3a2a18; }
+.route-info { font-size: 10px; color: #8a9aaa; line-height: 1.6; }
+kbd { background: #2a2a3e; border: 1px solid #3a3a5e; border-radius: 2px; padding: 1px 4px; font-size: 10px; }
+#hp-bar { width: 80px; height: 8px; background: #2a0a0a; border-radius: 2px; overflow: hidden; display: inline-block; vertical-align: middle; }
+#hp-fill { height: 100%; background: #c04040; transition: width 0.3s; }
+.sep { color: #3a3a5a; }
+#tsp-canvas { width: 100%; height: 100px; background: #0d0d14; border: 1px solid #2a2a3e; border-radius: 4px; margin-top: 4px; }
+.sort-vis { display: flex; align-items: flex-end; gap: 2px; height: 50px; margin-top: 4px; background: #0d0d14; border: 1px solid #2a2a3e; border-radius: 4px; padding: 4px; }
+.sort-bar { flex: 1; background: #3a5a7a; border-radius: 1px; transition: height 0.2s, background 0.2s; }
+</style>
+</head>
+<body>
+<div id="game-root">
+  <div id="sidebar">
+    <div style="text-align:center; padding: 4px 0 6px;">
+      <div style="font-size:14px; color:#9b7fd4; letter-spacing:2px; font-weight:bold;">DUNGEON ALGO</div>
+      <div style="font-size:9px; color:#4a5a6a; letter-spacing:1px;">Explorador de Algoritmos</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Status do Jogador</div>
+      <div class="stat-row"><span>HP</span><span><span id="hp-bar"><span id="hp-fill" style="width:100%"></span></span> <span id="hp-txt" class="stat-val">10/10</span></span></div>
+      <div class="stat-row"><span>Ouro</span><span class="stat-val" id="gold-txt">0</span></div>
+      <div class="stat-row"><span>Itens</span><span class="stat-val" id="items-txt">0/16</span></div>
+      <div class="stat-row"><span>Passos</span><span class="stat-val" id="steps-txt">0</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Inventário <span class="algo-badge badge-sort">heapsort</span></div>
+      <div class="inv-grid" id="inv-grid"></div>
+      <div style="margin-top:6px;">
+        <button class="btn btn-sort" onclick="sortInventory()">⬆ Ordenar por valor (Heapsort)</button>
+      </div>
+      <div id="sort-vis" class="sort-vis"></div>
+      <div id="sort-info" style="font-size:10px; color:#8a9aaa; margin-top:4px;"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Rota Ótima <span class="algo-badge badge-tsp">TSP</span></div>
+      <div class="route-info" id="route-info">Nenhuma rota calculada.<br>Colete alguns itens e use o botão abaixo.</div>
+      <canvas id="tsp-canvas" width="220" height="100"></canvas>
+      <button class="btn btn-tsp" onclick="calcTSP()" style="margin-top:5px;">🗺 Calcular rota TSP</button>
+      <button class="btn" onclick="clearTSP()" style="margin-top:2px;">✕ Limpar rota TSP</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Pathfinding <span class="algo-badge badge-bfs">BFS</span></div>
+      <div class="route-info" id="bfs-info">Clique em qualquer tile de chão no mapa para traçar o caminho com BFS.</div>
+      <button class="btn" onclick="clearPath()" style="margin-top:4px;">✕ Limpar caminho BFS</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Controles</div>
+      <div style="font-size:10px; color:#8a9aaa; line-height:2.2;">
+        <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou <kbd>↑↓←→</kbd> mover<br>
+        <kbd>E</kbd> coletar item próximo<br>
+        <kbd>Click</kbd> no mapa — BFS pathfinding<br>
+        Botão TSP — rota ótima de coleta
+      </div>
+    </div>
+  </div>
+
+  <div id="canvas-area">
+    <div id="hud">
+      <span style="color:#9b7fd4; font-size:11px; font-weight:bold;">DUNGEON ALGO EXPLORER</span>
+      <span class="sep">|</span>
+      <span id="hud-pos" style="font-size:11px; color:#6a9aaa;">Pos: (0,0)</span>
+      <span class="sep">|</span>
+      <span id="hud-algo" style="font-size:11px; color:#7fd4b8;">TSP: OFF</span>
+      <span class="sep">|</span>
+      <span id="hud-bfs" style="font-size:11px; color:#d4b87f;">BFS: inativo</span>
+    </div>
+    <canvas id="game-canvas"></canvas>
+    <div id="msg-bar">🗺 Bem-vindo ao Dungeon Algo Explorer! Use WASD para mover, E para coletar itens, clique no mapa para BFS.</div>
+  </div>
+</div>
+
+<script>
+const TILE = 32;
+const COLS = 50, ROWS = 35;
+const T_WALL = 0, T_FLOOR = 1;
+
+// ========== MAP GENERATION ==========
+let map = [];
+let rooms = [];
+
+function genMap() {
+  map = Array.from({length: ROWS}, () => Array(COLS).fill(T_WALL));
+  rooms = [];
+  for (let t = 0; t < 60; t++) {
+    const w = 4 + Math.floor(Math.random() * 8);
+    const h = 3 + Math.floor(Math.random() * 6);
+    const x = 1 + Math.floor(Math.random() * (COLS - w - 2));
+    const y = 1 + Math.floor(Math.random() * (ROWS - h - 2));
+    let ok = true;
+    for (let r = y - 1; r < y + h + 1 && ok; r++)
+      for (let c = x - 1; c < x + w + 1 && ok; c++)
+        if (map[r] && map[r][c] === T_FLOOR) ok = false;
+    if (!ok) continue;
+    for (let r = y; r < y + h; r++)
+      for (let c = x; c < x + w; c++) map[r][c] = T_FLOOR;
+    rooms.push({x, y, w, h, cx: x + Math.floor(w/2), cy: y + Math.floor(h/2)});
+  }
+  for (let i = 1; i < rooms.length; i++) {
+    const a = rooms[i-1], b = rooms[i];
+    let cx = a.cx, cy = a.cy;
+    while (cx !== b.cx) { map[cy][cx] = T_FLOOR; cx += cx < b.cx ? 1 : -1; }
+    while (cy !== b.cy) { map[cy][cx] = T_FLOOR; cy += cy < b.cy ? 1 : -1; }
+  }
+}
+
+// ========== ITEMS ==========
+const ITEM_TYPES = [
+  {emoji:'💎', name:'Diamante',  value:80, weight:3, color:'#88d8f8'},
+  {emoji:'⚗️',  name:'Poção',    value:30, weight:1, color:'#f888b8'},
+  {emoji:'📜',  name:'Pergaminho',value:50, weight:1, color:'#f8d888'},
+  {emoji:'⚔️',  name:'Espada',   value:70, weight:5, color:'#c8c8d8'},
+  {emoji:'🛡️',  name:'Escudo',   value:60, weight:6, color:'#a8b8d8'},
+  {emoji:'🪙',  name:'Moeda',    value:10, weight:1, color:'#f8e888'},
+  {emoji:'🔑',  name:'Chave',    value:40, weight:1, color:'#d8c888'},
+  {emoji:'💀',  name:'Crânio',   value:20, weight:2, color:'#a8a8b8'},
+  {emoji:'🧪',  name:'Elixir',   value:45, weight:1, color:'#88f8c8'},
+  {emoji:'📿',  name:'Amuleto',  value:55, weight:2, color:'#d888f8'},
+];
+
+let worldItems = [];
+
+function placeItems() {
+  worldItems = [];
+  const floorTiles = [];
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (map[r][c] === T_FLOOR) floorTiles.push({r, c});
+  const shuffled = [...floorTiles].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < Math.min(22, shuffled.length - 2); i++) {
+    const t = shuffled[i + 1];
+    const type = ITEM_TYPES[Math.floor(Math.random() * ITEM_TYPES.length)];
+    worldItems.push({...type, r: t.r, c: t.c, id: i, collected: false});
+  }
+}
+
+// ========== PLAYER ==========
+let player = {r:0, c:0, hp:10, maxHp:10, gold:0, steps:0};
+let inventory = [];
+
+function spawnPlayer() {
+  if (rooms.length > 0) {
+    player.r = rooms[0].cy;
+    player.c = rooms[0].cx;
+  } else {
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        if (map[r][c] === T_FLOOR) { player.r = r; player.c = c; return; }
+  }
+}
+
+// ========== BFS PATHFINDING ==========
+let bfsPath = [];
+let bfsTarget = null;
+
+function bfs(sr, sc, er, ec) {
+  const q = [[sr, sc]];
+  const visited = {};
+  const prev = {};
+  const key = (r, c) => r * 1000 + c;
+  visited[key(sr, sc)] = true;
+  const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+  while (q.length) {
+    const [r, c] = q.shift();
+    if (r === er && c === ec) {
+      const path = [];
+      let cur = key(er, ec);
+      while (cur !== key(sr, sc)) {
+        path.push(cur);
+        cur = prev[cur];
+      }
+      path.push(key(sr, sc));
+      return path.reverse().map(k => ({r: Math.floor(k/1000), c: k%1000}));
+    }
+    for (const [dr, dc] of dirs) {
+      const nr = r + dr, nc = c + dc;
+      if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+      if (map[nr][nc] === T_WALL) continue;
+      const nk = key(nr, nc);
+      if (!visited[nk]) {
+        visited[nk] = true;
+        prev[nk] = key(r, c);
+        q.push([nr, nc]);
+      }
+    }
+  }
+  return [];
+}
+
+function clearPath() {
+  bfsPath = [];
+  bfsTarget = null;
+  document.getElementById('bfs-info').textContent = 'Caminho limpo. Clique no mapa para novo BFS.';
+  document.getElementById('hud-bfs').textContent = 'BFS: inativo';
+  draw();
+}
+
+// ========== TSP ==========
+let tspRoute = [];
+let tspActive = false;
+
+function dist(pts, a, b) {
+  return Math.hypot(pts[a].c - pts[b].c, pts[a].r - pts[b].r);
+}
+
+function tspHeldKarp(pts) {
+  const n = pts.length;
+  if (n === 0) return [];
+  if (n === 1) return [0];
+  const INF = 1e9;
+  const dp = Array.from({length: 1 << n}, () => Array(n).fill(INF));
+  const parent = Array.from({length: 1 << n}, () => Array(n).fill(-1));
+  dp[1][0] = 0;
+  for (let mask = 1; mask < (1 << n); mask++) {
+    for (let u = 0; u < n; u++) {
+      if (!(mask & (1 << u)) || dp[mask][u] === INF) continue;
+      for (let v = 0; v < n; v++) {
+        if (mask & (1 << v)) continue;
+        const nm = mask | (1 << v);
+        const nd = dp[mask][u] + dist(pts, u, v);
+        if (nd < dp[nm][v]) { dp[nm][v] = nd; parent[nm][v] = u; }
+      }
+    }
+  }
+  const full = (1 << n) - 1;
+  let best = INF, last = -1;
+  for (let u = 1; u < n; u++) {
+    const d = dp[full][u] + dist(pts, u, 0);
+    if (d < best) { best = d; last = u; }
+  }
+  const path = [];
+  let mask = full, cur = last;
+  while (cur !== -1) { path.push(cur); const p = parent[mask][cur]; mask ^= (1 << cur); cur = p; }
+  return path.reverse();
+}
+
+function tspNearestNeighbor(pts) {
+  const n = pts.length;
+  const visited = new Array(n).fill(false);
+  const route = [0]; visited[0] = true;
+  for (let i = 1; i < n; i++) {
+    let best = -1, bestD = 1e9;
+    const cur = route[route.length - 1];
+    for (let j = 0; j < n; j++) {
+      if (visited[j]) continue;
+      const d = dist(pts, cur, j);
+      if (d < bestD) { bestD = d; best = j; }
+    }
+    route.push(best); visited[best] = true;
+  }
+  return route;
+}
+
+function twoOpt(pts, route) {
+  const n = route.length;
+  let improved = true;
+  while (improved) {
+    improved = false;
+    for (let i = 0; i < n - 1; i++) {
+      for (let j = i + 2; j < n; j++) {
+        const d1 = dist(pts, route[i], route[i+1]) + dist(pts, route[j], route[(j+1)%n]);
+        const d2 = dist(pts, route[i], route[j]) + dist(pts, route[i+1], route[(j+1)%n]);
+        if (d2 < d1 - 0.001) {
+          route.splice(i+1, j-i, ...route.slice(i+1, j+1).reverse());
+          improved = true;
+        }
+      }
+    }
+  }
+  return route;
+}
+
+function calcTSP() {
+  const uncollected = worldItems.filter(it => !it.collected);
+  if (uncollected.length < 2) { setMsg('Menos de 2 itens disponíveis para calcular rota TSP. Explore mais o mapa!'); return; }
+  const pts = [{r: player.r, c: player.c}, ...uncollected.map(it => ({r: it.r, c: it.c, id: it.id}))];
+  let order, algoName;
+  if (pts.length <= 12) {
+    order = tspHeldKarp(pts);
+    algoName = 'Held-Karp (exato)';
+    document.getElementById('route-info').innerHTML =
+      '<b style="color:#9b7fd4">Held-Karp exato</b><br>n=' + pts.length + ' pontos<br>Complexidade: O(n²·2ⁿ)<br>Rota ótima garantida.<br>Distância: ' + calcRouteLen(pts, order).toFixed(1) + ' tiles';
+  } else {
+    order = tspNearestNeighbor(pts);
+    order = twoOpt(pts, order);
+    algoName = 'Vizinho Mais Próximo + 2-opt';
+    document.getElementById('route-info').innerHTML =
+      '<b style="color:#9b7fd4">Nearest Neighbor + 2-opt</b><br>n=' + pts.length + ' pontos<br>Complexidade: O(n²)<br>Heurística com refinamento.<br>Distância: ' + calcRouteLen(pts, order).toFixed(1) + ' tiles';
+  }
+  tspRoute = order.map(i => pts[i]);
+  tspActive = true;
+  document.getElementById('hud-algo').textContent = 'TSP: ON (' + pts.length + ' pts)';
+  drawTSPMini(pts, order);
+  setMsg('Rota TSP calculada! ' + pts.length + ' pontos usando ' + algoName + '. Rota desenhada no mapa em roxo.');
+  draw();
+}
+
+function calcRouteLen(pts, order) {
+  let d = 0;
+  for (let i = 0; i < order.length - 1; i++) d += dist(pts, order[i], order[i+1]);
+  d += dist(pts, order[order.length-1], order[0]);
+  return d;
+}
+
+function clearTSP() {
+  tspRoute = []; tspActive = false;
+  document.getElementById('hud-algo').textContent = 'TSP: OFF';
+  document.getElementById('route-info').textContent = 'Rota limpa.';
+  const tc = document.getElementById('tsp-canvas');
+  tc.getContext('2d').clearRect(0, 0, tc.width, tc.height);
+  draw();
+}
+
+function drawTSPMini(pts, order) {
+  const tc = document.getElementById('tsp-canvas');
+  const ctx2 = tc.getContext('2d');
+  ctx2.clearRect(0, 0, tc.width, tc.height);
+  if (pts.length < 2) return;
+  const minR = Math.min(...pts.map(p => p.r)), maxR = Math.max(...pts.map(p => p.r));
+  const minC = Math.min(...pts.map(p => p.c)), maxC = Math.max(...pts.map(p => p.c));
+  const pad = 10;
+  const scX = (tc.width - 2*pad) / Math.max(maxC - minC, 1);
+  const scY = (tc.height - 2*pad) / Math.max(maxR - minR, 1);
+  const px = p => pad + (p.c - minC) * scX;
+  const py = p => pad + (p.r - minR) * scY;
+  ctx2.strokeStyle = '#4a3a6e'; ctx2.lineWidth = 1.5;
+  ctx2.beginPath();
+  for (let i = 0; i < order.length; i++) {
+    const p = pts[order[i]];
+    i === 0 ? ctx2.moveTo(px(p), py(p)) : ctx2.lineTo(px(p), py(p));
+  }
+  ctx2.closePath(); ctx2.stroke();
+  for (let i = 0; i < order.length; i++) {
+    const p = pts[order[i]];
+    ctx2.beginPath(); ctx2.arc(px(p), py(p), i === 0 ? 5 : 3, 0, Math.PI*2);
+    ctx2.fillStyle = i === 0 ? '#7ab8e8' : '#9b7fd4'; ctx2.fill();
+    if (i === 0) { ctx2.strokeStyle = '#4a8aaa'; ctx2.lineWidth = 1; ctx2.stroke(); }
+  }
+  // order numbers
+  ctx2.fillStyle = '#6a7a8a'; ctx2.font = '8px monospace'; ctx2.textAlign = 'center';
+  for (let i = 0; i < order.length; i++) {
+    const p = pts[order[i]];
+    ctx2.fillText(i+1, px(p), py(p) - 6);
+  }
+}
+
+// ========== HEAPSORT INVENTORY ==========
+function heapify(arr, n, i) {
+  let largest = i, l = 2*i+1, r = 2*i+2;
+  if (l < n && arr[l].value > arr[largest].value) largest = l;
+  if (r < n && arr[r].value > arr[largest].value) largest = r;
+  if (largest !== i) {
+    [arr[i], arr[largest]] = [arr[largest], arr[i]];
+    heapify(arr, n, largest);
+  }
+}
+
+function heapSort(arr) {
+  const n = arr.length;
+  for (let i = Math.floor(n/2) - 1; i >= 0; i--) heapify(arr, n, i);
+  for (let i = n - 1; i > 0; i--) { [arr[0], arr[i]] = [arr[i], arr[0]]; heapify(arr, i, 0); }
+  return arr;
+}
+
+function sortInventory() {
+  if (inventory.length < 2) { setMsg('Inventário com menos de 2 itens. Colete mais para ordenar.'); return; }
+  heapSort(inventory);
+  inventory.reverse(); // maior primeiro
+  renderInv();
+  renderSortVis();
+  document.getElementById('sort-info').textContent = 'Heapsort executado — O(n log n). Ordenado do mais valioso ao menos valioso.';
+  setMsg('Inventário ordenado por valor (maior→menor) via Heapsort. Complexidade: O(n log n).');
+}
+
+function renderSortVis() {
+  const sv = document.getElementById('sort-vis');
+  sv.innerHTML = '';
+  if (inventory.length === 0) return;
+  inventory.forEach(it => {
+    const b = document.createElement('div');
+    b.className = 'sort-bar';
+    const pct = Math.max(10, Math.round((it.value / 80) * 100));
+    b.style.height = pct + '%';
+    b.style.background = it.color || '#3a5a7a';
+    b.title = it.name + ': ' + it.value;
+    sv.appendChild(b);
+  });
+}
+
+function renderInv() {
+  const grid = document.getElementById('inv-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 16; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'inv-slot' + (inventory[i] ? ' filled' : '');
+    if (inventory[i]) {
+      slot.textContent = inventory[i].emoji;
+      slot.title = inventory[i].name + '\nValor: ' + inventory[i].value + '\nPeso: ' + inventory[i].weight;
+    }
+    grid.appendChild(slot);
+  }
+  document.getElementById('items-txt').textContent = inventory.length + '/16';
+}
+
+// ========== COLLECT ==========
+function tryCollect() {
+  const near = worldItems.filter(it =>
+    !it.collected &&
+    Math.abs(it.r - player.r) <= 1 &&
+    Math.abs(it.c - player.c) <= 1
+  );
+  if (near.length === 0) { setMsg('Nenhum item próximo. Aproxime-se de um item e pressione E.'); return; }
+  if (inventory.length >= 16) { setMsg('Inventário cheio (16/16)! Ordene com Heapsort para organizar.'); return; }
+  const it = near[0];
+  it.collected = true;
+  inventory.push({...it});
+  if (it.name === 'Moeda') player.gold += it.value;
+  renderInv();
+  renderSortVis();
+  document.getElementById('sort-info').textContent = '';
+  setMsg('✅ Coletou ' + it.emoji + ' ' + it.name + '! Valor: ' + it.value + ' | Peso: ' + it.weight + ' | Inventário: ' + inventory.length + '/16');
+  updateHUD();
+  draw();
+}
+
+// ========== CAMERA ==========
+let cam = {x: 0, y: 0};
+
+function updateCam() {
+  const vw = canvas.width / TILE, vh = canvas.height / TILE;
+  cam.x = Math.max(0, Math.min(COLS - vw, player.c - vw / 2));
+  cam.y = Math.max(0, Math.min(ROWS - vh, player.r - vh / 2));
+}
+
+// ========== DRAW ==========
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+
+const FLOOR_COLOR = '#1a1a26';
+const FLOOR_DARK  = '#141420';
+const WALL_COLOR  = '#0a0a14';
+const WALL_EDGE   = '#1e1e32';
+
+function draw() {
+  const cw = canvas.width, ch = canvas.height;
+  ctx.fillStyle = '#0a0a14';
+  ctx.fillRect(0, 0, cw, ch);
+  updateCam();
+  const offX = -cam.x * TILE, offY = -cam.y * TILE;
+  const r0 = Math.floor(cam.y), r1 = Math.min(ROWS, Math.ceil(cam.y + ch / TILE) + 1);
+  const c0 = Math.floor(cam.x), c1 = Math.min(COLS, Math.ceil(cam.x + cw / TILE) + 1);
+
+  for (let r = r0; r < r1; r++) {
+    for (let c = c0; c < c1; c++) {
+      const t = map[r][c];
+      const tx = c * TILE + offX, ty = r * TILE + offY;
+      if (t === T_FLOOR) {
+        ctx.fillStyle = FLOOR_COLOR;
+        ctx.fillRect(tx, ty, TILE, TILE);
+        ctx.fillStyle = FLOOR_DARK;
+        ctx.fillRect(tx + 1, ty + TILE - 3, TILE - 2, 2);
+        ctx.fillRect(tx + TILE - 3, ty + 1, 2, TILE - 2);
+      } else {
+        ctx.fillStyle = WALL_COLOR;
+        ctx.fillRect(tx, ty, TILE, TILE);
+        ctx.strokeStyle = WALL_EDGE;
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(tx + 0.5, ty + 0.5, TILE - 1, TILE - 1);
+      }
+    }
+  }
+
+  // BFS path
+  if (bfsPath.length > 0) {
+    for (let i = 0; i < bfsPath.length; i++) {
+      const p = bfsPath[i];
+      const alpha = i === bfsPath.length - 1 ? 0.5 : 0.15;
+      ctx.fillStyle = `rgba(122,184,232,${alpha})`;
+      ctx.fillRect(p.c * TILE + offX + 3, p.r * TILE + offY + 3, TILE - 6, TILE - 6);
+    }
+    // draw path line
+    ctx.save();
+    ctx.strokeStyle = 'rgba(122,184,232,0.4)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    bfsPath.forEach((p, i) => {
+      const px = p.c * TILE + offX + TILE/2, py = p.r * TILE + offY + TILE/2;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // TSP route
+  if (tspActive && tspRoute.length > 1) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(155,127,212,0.7)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    tspRoute.forEach((p, i) => {
+      const px = p.c * TILE + offX + TILE/2, py = p.r * TILE + offY + TILE/2;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    });
+    ctx.closePath();
+    ctx.stroke();
+    // order numbers on route
+    ctx.setLineDash([]);
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    tspRoute.forEach((p, i) => {
+      if (i === 0) return;
+      const px = p.c * TILE + offX + TILE/2, py = p.r * TILE + offY + TILE/2;
+      ctx.fillStyle = 'rgba(30,15,50,0.7)';
+      ctx.fillRect(px - 7, py - 7, 14, 14);
+      ctx.fillStyle = '#c0a0f0';
+      ctx.fillText(i, px, py);
+    });
+    ctx.restore();
+  }
+
+  // World items
+  for (const it of worldItems) {
+    if (it.collected) continue;
+    if (it.r < r0 - 1 || it.r > r1 + 1 || it.c < c0 - 1 || it.c > c1 + 1) continue;
+    const tx = it.c * TILE + offX, ty = it.r * TILE + offY;
+    const near = Math.abs(it.r - player.r) <= 1 && Math.abs(it.c - player.c) <= 1;
+    ctx.save();
+    if (near) {
+      ctx.shadowColor = it.color || '#ffffff';
+      ctx.shadowBlur = 12;
+      ctx.strokeStyle = 'rgba(255,255,200,0.5)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(tx + 2, ty + 2, TILE - 4, TILE - 4);
+    }
+    ctx.font = '18px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(it.emoji, tx + TILE/2, ty + TILE/2);
+    if (near) {
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(255,255,200,0.9)';
+      ctx.font = '9px monospace';
+      ctx.fillText('[E]', tx + TILE/2, ty - 4);
+    }
+    ctx.restore();
+  }
+
+  // Player
+  ctx.save();
+  const px = player.c * TILE + offX + TILE/2;
+  const py = player.r * TILE + offY + TILE/2;
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath(); ctx.ellipse(px, py + 10, 8, 4, 0, 0, Math.PI*2); ctx.fill();
+  // body
+  ctx.fillStyle = '#3a5a8a';
+  ctx.fillRect(px - 5, py + 2, 10, 9);
+  // head
+  ctx.fillStyle = '#f8d8b8';
+  ctx.beginPath(); ctx.arc(px, py - 4, 7, 0, Math.PI*2); ctx.fill();
+  // eyes
+  ctx.fillStyle = '#202838';
+  ctx.fillRect(px - 3, py - 5, 2, 2);
+  ctx.fillRect(px + 1, py - 5, 2, 2);
+  ctx.restore();
+}
+
+// ========== INPUT ==========
+const MOVE_MAP = {
+  'ArrowUp':[-1,0], 'ArrowDown':[1,0], 'ArrowLeft':[0,-1], 'ArrowRight':[0,1],
+  'w':[-1,0], 's':[1,0], 'a':[0,-1], 'd':[0,1],
+  'W':[-1,0], 'S':[1,0], 'A':[0,-1], 'D':[0,1],
+};
+
+document.addEventListener('keydown', e => {
+  if (MOVE_MAP[e.key]) {
+    e.preventDefault();
+    const [dr, dc] = MOVE_MAP[e.key];
+    movePlayer(dr, dc);
+  }
+  if (e.key === 'e' || e.key === 'E') tryCollect();
+});
+
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
+  const tc = Math.floor(mx / TILE + cam.x);
+  const tr = Math.floor(my / TILE + cam.y);
+  if (tr < 0 || tr >= ROWS || tc < 0 || tc >= COLS) return;
+  if (map[tr][tc] === T_WALL) { setMsg('Não é possível fazer BFS para uma parede. Clique em um tile de chão.'); return; }
+  const path = bfs(player.r, player.c, tr, tc);
+  bfsPath = path;
+  bfsTarget = {r: tr, c: tc};
+  const len = path.length;
+  document.getElementById('bfs-info').innerHTML =
+    'De (' + player.r + ',' + player.c + ') → (' + tr + ',' + tc + ')<br>' +
+    (len > 0
+      ? 'Caminho: <b style="color:#7ab8e8">' + len + ' passos</b><br>BFS — O(V+E), ótimo em grafos não-ponderados'
+      : '<b style="color:#f08080">Sem caminho acessível</b>');
+  document.getElementById('hud-bfs').textContent = len > 0 ? 'BFS: ' + len + ' passos' : 'BFS: sem caminho';
+  setMsg(len > 0
+    ? '🔵 BFS encontrou caminho: ' + len + ' passos até (' + tr + ',' + tc + '). Complexidade O(V+E).'
+    : '⚠ BFS: nenhum caminho acessível até (' + tr + ',' + tc + ').');
+  draw();
+});
+
+function movePlayer(dr, dc) {
+  const nr = player.r + dr, nc = player.c + dc;
+  if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS || map[nr][nc] === T_WALL) return;
+  player.r = nr; player.c = nc; player.steps++;
+  if (bfsTarget && player.r === bfsTarget.r && player.c === bfsTarget.c) {
+    bfsPath = []; bfsTarget = null;
+    document.getElementById('bfs-info').textContent = '✅ Destino BFS alcançado!';
+    document.getElementById('hud-bfs').textContent = 'BFS: chegou!';
+  }
+  updateHUD();
+  draw();
+}
+
+function updateHUD() {
+  document.getElementById('hud-pos').textContent = 'Pos: (' + player.r + ',' + player.c + ')';
+  document.getElementById('gold-txt').textContent = player.gold;
+  document.getElementById('steps-txt').textContent = player.steps;
+  const pct = Math.round((player.hp / player.maxHp) * 100);
+  document.getElementById('hp-fill').style.width = pct + '%';
+  document.getElementById('hp-txt').textContent = player.hp + '/' + player.maxHp;
+}
+
+function setMsg(t) { document.getElementById('msg-bar').textContent = t; }
+
+// ========== RESIZE ==========
+function resize() {
+  const ca = document.getElementById('canvas-area');
+  canvas.width = ca.clientWidth;
+  canvas.height = ca.clientHeight - 36 - 28;
+  canvas.style.position = 'absolute';
+  canvas.style.top = '36px';
+  canvas.style.left = '0';
+  draw();
+}
+
+// ========== INIT ==========
+genMap();
+placeItems();
+spawnPlayer();
+renderInv();
+resize();
+updateHUD();
+window.addEventListener('resize', resize);
+setMsg('🗺 Jogo iniciado! WASD para mover | E para coletar | Click no mapa para BFS | Botão TSP para rota ótima');
+</script>
+</body>
+</html>
