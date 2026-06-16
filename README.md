@@ -91,3 +91,12 @@ Cada ação importante do jogador envolve conceitos clássicos da computação:
 * Organizar dados utilizando estruturas eficientes.
 
 Dessa forma, o projeto une entretenimento e aprendizado, demonstrando aplicações práticas de algoritmos através de uma experiência interativa de exploração.
+## Como executar o projeto
+
+Para executar o projeto localmente, siga os passos abaixo:
+
+1. Clone este repositório;
+2. Entre na pasta do projeto;
+3. Instale as dependências necessárias;
+4. Execute a aplicação conforme a tecnologia utilizada;
+5. Verifique se todas as dependências estão instaladas corretamente.
