@@ -91,3 +91,7 @@ Cada ação importante do jogador envolve conceitos clássicos da computação:
 * Organizar dados utilizando estruturas eficientes.
 
 Dessa forma, o projeto une entretenimento e aprendizado, demonstrando aplicações práticas de algoritmos através de uma experiência interativa de exploração.
+
+## Sistema de Inventário
+
+O inventário permite armazenar os itens coletados durante a exploração da masmorra, possibilitando sua organização por valor através do algoritmo HeapSort.
