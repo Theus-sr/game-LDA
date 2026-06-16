@@ -98,3 +98,7 @@ Dessa forma, o projeto une entretenimento e aprendizado, demonstrando aplicaçõ
 - HeapSort
 - Travelling Salesman Problem (TSP)
 - Estruturas de dados para gerenciamento de inventário
+
+## Estrutura do Projeto
+
+O projeto é dividido em módulos responsáveis pela geração da masmorra, gerenciamento do inventário e execução dos algoritmos BFS, TSP e HeapSort.
