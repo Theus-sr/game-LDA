@@ -93,3 +93,4 @@ Cada ação importante do jogador envolve conceitos clássicos da computação:
 Dessa forma, o projeto une entretenimento e aprendizado, demonstrando aplicações práticas de algoritmos através de uma experiência interativa de exploração.
 
 
+
