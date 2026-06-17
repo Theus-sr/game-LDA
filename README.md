@@ -92,13 +92,5 @@ Cada ação importante do jogador envolve conceitos clássicos da computação:
 
 Dessa forma, o projeto une entretenimento e aprendizado, demonstrando aplicações práticas de algoritmos através de uma experiência interativa de exploração.
 
-## Tecnologias Utilizadas
 
-- Algoritmos BFS (Breadth-First Search)
-- HeapSort
-- Travelling Salesman Problem (TSP)
-- Estruturas de dados para gerenciamento de inventário
 
-## Estrutura do Projeto
-
-O projeto é dividido em módulos responsáveis pela geração da masmorra, gerenciamento do inventário e execução dos algoritmos BFS, TSP e HeapSort.
